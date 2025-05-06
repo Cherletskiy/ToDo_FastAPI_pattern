@@ -40,6 +40,7 @@ async def close_db_pool():
     if pool:
         await pool.close()
         logger.info("Пул соединений закрыт")
+        pool = None
 
 
 async def init_db():
