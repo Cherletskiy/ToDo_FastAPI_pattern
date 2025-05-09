@@ -1,55 +1,43 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, validator, Field, field_validator
 from datetime import datetime
+from typing import Optional
+import pytz
 
 
-class TaskCreate(BaseModel):
-    """Модель для создания новой задачи"""
-    title: str = Field(..., min_length=1, max_length=255)
-    description: str | None = Field(None, max_length=1000)
-    due_date: datetime | None = None
+class TaskBase(BaseModel):
+    title: str = Field(..., max_length=255)
+    description: Optional[str] = Field(None, max_length=1000)
+    due_date: Optional[datetime] = None
     status: str = Field(..., pattern="^(pending|completed|overdue)$")
 
-    @field_validator("title")
-    def title_must_not_be_empty(cls, v):
-        if not v.strip():
-            raise ValueError("Название задачи не может быть пустым")
-        return v
 
-    @field_validator("due_date")
-    def due_date_not_in_past(cls, v):
-        if v is not None and v < datetime.now().replace(tzinfo=None):
-            raise ValueError("Дата выполнения не может быть в прошлом")
-        return v
+class TaskCreate(TaskBase):
+    pass
 
 
-class TaskUpdate(BaseModel):
-    """Модель для обновления задачи"""
-    title: str | None = Field(None, min_length=1, max_length=255)
-    description: str | None = Field(None, max_length=1000)
-    due_date: datetime | None = None
-    status: str | None = Field(None, pattern="^(pending|completed|overdue)$")
+class TaskUpdate(TaskBase):
+    title: Optional[str] = Field(None, max_length=255)
+    description: Optional[str] = Field(None, max_length=1000)
+    due_date: Optional[datetime] = None
+    status: Optional[str] = Field(None, pattern="^(pending|completed|overdue)$")
 
-    @field_validator("title")
-    def title_must_not_be_empty(cls, v):
-        if v is not None and not v.strip():
-            raise ValueError("Название задачи не может быть пустым")
-        return v
-
-    @field_validator("due_date")
-    def due_date_not_in_past(cls, v):
-        if v is not None and v < datetime.now().replace(tzinfo=None):
-            raise ValueError("Дата выполнения не может быть в прошлом")
-        return v
+    class Config:
+        extra = "forbid"
 
 
-class TaskResponse(BaseModel):
-    """Модель для ответа API с данными задачи"""
+class TaskResponse(TaskBase):
     id: int
-    title: str
-    description: str | None = None
     created_at: datetime
-    due_date: datetime | None = None
-    status: str
 
     class Config:
         from_attributes = True
+
+    @field_validator("due_date")
+    def due_date_not_in_past(cls, v):
+        """Проверяет, что due_date не в прошлом, сравнивая в UTC"""
+        if v is not None:
+            now_utc = datetime.now(tz=pytz.UTC)
+            v_utc = v if v.tzinfo else v.replace(tzinfo=pytz.UTC)
+            if v_utc < now_utc:
+                raise ValueError("Дата выполнения не может быть в прошлом")
+        return v

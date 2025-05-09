@@ -21,7 +21,9 @@ class TaskRepository:
                     VALUES ($1, $2, $3, $4)
                     RETURNING id;
                 """
-                task_id = await connection.fetchval(query, title, description, due_date, status)
+                due_date_naive = due_date.replace(tzinfo=None) if due_date and due_date.tzinfo else due_date
+                logger.debug(f"create_task: due_date={due_date}, due_date_naive={due_date_naive}")
+                task_id = await connection.fetchval(query, title, description, due_date_naive, status)
                 logger.info(f"Задача успешно создана. ID = {task_id}")
                 return task_id
             except Exception as e:
@@ -62,7 +64,9 @@ class TaskRepository:
                     params.append(status)
                 if due_date:
                     query += f" AND due_date <= ${len(params) + 1}"
-                    params.append(due_date)
+                    due_date_naive = due_date.replace(tzinfo=None) if due_date and due_date.tzinfo else due_date
+                    logger.debug(f"get_tasks: due_date={due_date}, due_date_naive={due_date_naive}")
+                    params.append(due_date_naive)
 
                 tasks = await connection.fetch(query, *params)
                 tasks_list = [dict(task) for task in tasks]
@@ -91,7 +95,9 @@ class TaskRepository:
                     param_index += 1
                 if due_date is not None:
                     updates.append(f"due_date = ${param_index}")
-                    params.append(due_date)
+                    due_date_naive = due_date.replace(tzinfo=None) if due_date and due_date.tzinfo else due_date
+                    logger.debug(f"update_task: due_date={due_date}, due_date_naive={due_date_naive}")
+                    params.append(due_date_naive)
                     param_index += 1
                 if status is not None:
                     updates.append(f"status = ${param_index}")
