@@ -5,6 +5,7 @@ from asyncpg import Pool
 from app.logging_config import setup_logger
 from datetime import datetime
 from typing import List
+from pydantic import ValidationError
 
 
 # Настройка логирования
@@ -100,12 +101,16 @@ async def update_task(task_id: int, task: TaskUpdate, service: TaskService = Dep
             due_date=task.due_date,
             status=task.status
         )
-        if updated:
-            task_dict = await service.get_task(task_id)
-            return TaskResponse(**task_dict)
-    except ValueError as e:
-        logger.error(f"Ошибка при обновлении задачи: {e}")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        if not updated:
+            logger.error(f"Задача с id={task_id} не найдена")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Задача с id={task_id} не найдена")
+        task_dict = await service.get_task(task_id)
+        if task_dict is None:
+            logger.error(f"Задача с id={task_id} не найдена после обновления")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Задача с id={task_id} не найдена")
+        return TaskResponse(**task_dict)
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(f"Неизвестная ошибка при обновлении задачи: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Внутренняя ошибка сервера")
@@ -118,10 +123,10 @@ async def delete_task(task_id: int, service: TaskService = Depends(get_task_serv
     try:
         deleted = await service.delete_task(task_id)
         if not deleted:
-            raise ValueError(f"Задача с id={task_id} не найдена")
-    except ValueError as e:
-        logger.error(f"Ошибка при удалении задачи: {e}")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+            logger.error(f"Задача с id={task_id} не найдена")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Задача с id={task_id} не найдена")
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(f"Неизвестная ошибка при удалении задачи: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Внутренняя ошибка сервера")

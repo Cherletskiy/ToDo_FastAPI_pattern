@@ -94,9 +94,9 @@ class TaskService:
         updated = await self.repository.update_task(task_id, title, description, due_date, status)
         if not updated:
             logger.warning(f"Задача с id={task_id} не найдена для обновления")
-            raise ValueError(f"Задача с id={task_id} не найдена")
+            return False
         logger.info(f"Задача с id={task_id} обновлена")
-        return updated
+        return True
 
     async def delete_task(self, task_id: int) -> bool:
         """Удаление задачи. Работа с репозиторием repository.delete_task.
@@ -106,7 +106,7 @@ class TaskService:
         logger.info(f"Удаление задачи с id={task_id}")
         deleted = await self.repository.delete_task(task_id)
         if not deleted:
-            logger.warning(f"Задача с id={task_id} не найдена для удаления")
-            raise ValueError(f"Задача с id={task_id} не найдена")
+            logger.warning(f"Задача с id={task_id} не найдена")
+            return False
         logger.info(f"Задача с id={task_id} удалена")
-        return deleted
+        return True
