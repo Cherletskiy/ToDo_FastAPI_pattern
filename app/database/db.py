@@ -1,7 +1,9 @@
-import asyncpg
 from dotenv import load_dotenv
 import os
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
 from app.logging_config import setup_logger
+from app.database.models import Base
 
 
 # Настройка логирования
@@ -19,42 +21,28 @@ DATABASE_CONFIG = {
 }
 
 
-async def init_db_pool() -> asyncpg.Pool:
-    """Инициализация пула соединений с базой данных"""
-    try:
-        pool = await asyncpg.create_pool(**DATABASE_CONFIG)
-        logger.info("Пул соединений успешно создан")
-        return pool
-    except Exception as e:
-        logger.error(f"Ошибка при создании пула соединений: {e}")
-        raise
+DSN = f"postgresql+asyncpg://{DATABASE_CONFIG['user']}:{DATABASE_CONFIG['password']}@{DATABASE_CONFIG['host']}:{DATABASE_CONFIG['port']}/{DATABASE_CONFIG['database']}"
+
+engine = create_async_engine(
+    url=DSN,
+    echo=True,
+    pool_size=5,
+    max_overflow=10
+)
+
+async_session = async_sessionmaker(
+    bind=engine,
+    expire_on_commit=False,
+    class_=AsyncSession
+)
 
 
-async def init_db(pool: asyncpg.Pool):
-    """Инициализация базы данных и создание таблицы tasks"""
-    async with pool.acquire() as connection:
-        try:
-            await connection.execute("""
-                CREATE TABLE IF NOT EXISTS tasks (
-                    id SERIAL PRIMARY KEY,
-                    title VARCHAR(255) NOT NULL,
-                    description TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    due_date TIMESTAMP,
-                    status VARCHAR(20) NOT NULL
-                )
-            """)
-            logger.info("Таблица tasks успешно создана или уже существует")
-        except Exception as e:
-            logger.error(f"Ошибка при создании таблицы: {e}")
-            raise
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        logger.info("Таблицы базы данных созданы")
 
 
-async def close_db_pool(pool: asyncpg.Pool):
-    """Закрытие пула соединений"""
-    try:
-        await pool.close()
-        logger.info("Пул соединений закрыт")
-    except Exception as e:
-        logger.error(f"Ошибка при закрытии пула соединений: {e}")
-        raise
+async def close_db():
+    await engine.dispose()
+    logger.info("Движок базы данных закрыт")

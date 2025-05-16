@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.routes.tasks import router as tasks_router
-from app.database.db import init_db_pool, init_db, close_db_pool
+from app.database.db import init_db, close_db
 from app.logging_config import setup_logger
 
 
@@ -12,16 +12,15 @@ logger = setup_logger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Управление жизненным циклом приложения"""
-    logger.info("Запуск приложения: инициализация пула соединений")
-    app.state.pool = await init_db_pool()
-    await init_db(app.state.pool)
+    logger.info("Запуск приложения: инициализация БД")
+    await init_db()
     logger.info("Приложение запущено")
 
     try:
         yield
     finally:
-        logger.info("Остановка приложения: закрытие пула соединений")
-        await close_db_pool(app.state.pool)
+        logger.info("Остановка приложения: закрытие БД")
+        await close_db()
         logger.info("Приложение остановлено")
 
 
