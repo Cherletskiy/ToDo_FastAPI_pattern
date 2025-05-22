@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+
 from app.routes.tasks import router as tasks_router
+from app.routes.auth import router as auth_router
 from app.database.db import init_db, close_db
 from app.logging_config import setup_logger
 
@@ -32,5 +34,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Подключение роутера
+# Подключение роутеров
 app.include_router(tasks_router)
+app.include_router(auth_router)

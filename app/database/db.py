@@ -5,6 +5,9 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from app.logging_config import setup_logger
 from app.database.models import Base
 
+from typing import AsyncGenerator
+from fastapi import Depends
+
 
 # Настройка логирования
 logger = setup_logger(__name__)
@@ -25,7 +28,7 @@ DSN = f"postgresql+asyncpg://{DATABASE_CONFIG['user']}:{DATABASE_CONFIG['passwor
 
 engine = create_async_engine(
     url=DSN,
-    echo=True,
+    echo=False,
     pool_size=5,
     max_overflow=10
 )
@@ -35,6 +38,11 @@ async_session = async_sessionmaker(
     expire_on_commit=False,
     class_=AsyncSession
 )
+
+
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session() as session:
+        yield session
 
 
 async def init_db():
