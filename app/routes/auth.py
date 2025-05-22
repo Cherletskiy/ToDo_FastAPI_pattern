@@ -44,8 +44,11 @@ async def login_for_access_token(
     access_token = AuthService.create_access_token(
         data={"sub": user.id, "username": user.username, "email": user.email},
     )
+    refresh_token = AuthService.create_refresh_token(
+        data={"sub": user.id},
+    )
     logger.info(f"Пользователь аутентифицирован: {user.email}")
-    return Token(access_token=access_token, token_type="bearer")
+    return Token(access_token=access_token, refresh_token=refresh_token)
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -69,3 +72,15 @@ async def get_info_user(
     user = await AuthService.get_current_user(token, session)
     logger.info(f"Получены данные текущего пользователя: {user.email}")
     return user
+
+
+@router.post("/refresh", response_model=Token)
+async def refresh_token(
+    refresh_token: str = Form(...),
+    session: AsyncSession = Depends(async_session)
+) -> Token:
+    user = await AuthService.get_current_user(refresh_token, session, expected_type="refresh")
+    access_token = AuthService.create_access_token(
+        data={"sub": user.id, "username": user.username, "email": user.email},
+    )
+    return Token(access_token=access_token, refresh_token=refresh_token)
