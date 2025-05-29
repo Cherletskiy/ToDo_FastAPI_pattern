@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.db import get_async_session as async_session
+from app.database.db import get_async_session
 from app.database.models import User
 from app.models.user import UserCreate, UserResponse, Token
 from app.repository.user_repository import UserRepository
@@ -28,7 +28,7 @@ async def login_form(
 @router.post("/login", response_model=Token)
 async def login_for_access_token(
         form_data: dict = Depends(login_form),
-        session: AsyncSession = Depends(async_session)
+        session: AsyncSession = Depends(get_async_session)
 ) -> Token:
     email = form_data.get("email")
     password = form_data.get("password")
@@ -52,7 +52,7 @@ async def login_for_access_token(
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register_user(user: UserCreate, session: AsyncSession = Depends(async_session)) -> User:
+async def register_user(user: UserCreate, session: AsyncSession = Depends(get_async_session)) -> User:
     repo = UserRepository(session)
     existing_user = await repo.get_user_by_email(user.email)
     if existing_user:
@@ -67,7 +67,7 @@ async def register_user(user: UserCreate, session: AsyncSession = Depends(async_
 @router.get("/me", response_model=UserResponse)
 async def get_info_user(
     token: str = Depends(oauth2_scheme),
-    session: AsyncSession = Depends(async_session)
+    session: AsyncSession = Depends(get_async_session)
 ):
     user = await AuthService.get_current_user(token, session)
     logger.info(f"Получены данные текущего пользователя: {user.email}")
@@ -77,7 +77,7 @@ async def get_info_user(
 @router.post("/refresh", response_model=Token)
 async def refresh_token(
     refresh_token: str = Form(...),
-    session: AsyncSession = Depends(async_session)
+    session: AsyncSession = Depends(get_async_session)
 ) -> Token:
     user = await AuthService.get_current_user(refresh_token, session, expected_type="refresh")
     access_token = AuthService.create_access_token(
