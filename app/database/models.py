@@ -20,6 +20,29 @@ class TaskStatus(PyEnum):
     OVERDUE = "overdue"
 
 
+class Task(Base):
+    __tablename__ = "tasks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    title = Column(String(255), nullable=False, index=True)
+    description = Column(String(1000))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    due_date = Column(DateTime)
+
+    status = Column(
+        Enum(
+            TaskStatus,
+            name="taskstatus",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+        ),
+        nullable=False,
+        default=TaskStatus.NOT_STARTED.value,
+    )
+
+    user = relationship("User", back_populates="tasks")
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -32,15 +55,4 @@ class User(Base):
     tasks = relationship("Task", back_populates="user", cascade="all, delete-orphan")
 
 
-class Task(Base):
-    __tablename__ = "tasks"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    title = Column(String(255), nullable=False, index=True)
-    description = Column(String(1000))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    due_date = Column(DateTime)
-    status = Column(Enum(TaskStatus), nullable=False, default=TaskStatus.NOT_STARTED)
-
-    user = relationship("User", back_populates="tasks")

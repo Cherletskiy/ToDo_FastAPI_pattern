@@ -30,20 +30,21 @@ async def create_task(
     user, session = user_session
     service = TaskService()
     try:
-        task_id = await service.create_task(
-            session=session,
-            user_id=user.id,
-            title=task.title,
-            description=task.description,
-            due_date=task.due_date,
-            status=task.status
-        )
-        task_data = await service.get_task(session, task_id, user.id)
-        if not task_data:
-            logger.warning(f"Задача ID={task_id} не найдена для user_id={user.id}")
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задача не найдена")
-        logger.info(f"Маршрут: Задача создана, ID={task_id}, user_id={user.id}")
-        return task_data
+        async with session.begin():
+            task_id = await service.create_task(
+                session=session,
+                user_id=user.id,
+                title=task.title,
+                description=task.description,
+                due_date=task.due_date,
+                status=task.status
+            )
+            task_data = await service.get_task(session, task_id, user.id)
+            if not task_data:
+                logger.warning(f"Задача ID={task_id} не найдена для user_id={user.id}")
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задача не найдена")
+            logger.info(f"Маршрут: Задача создана, ID={task_id}, user_id={user.id}")
+            return task_data
     except ValueError as e:
         logger.error(f"Ошибка создания задачи: {e}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -86,24 +87,25 @@ async def update_task(
     user, session = user_session
     service = TaskService()
     try:
-        success = await service.update_task(
-            session=session,
-            user_id=user.id,
-            task_id=task_id,
-            title=task.title,
-            description=task.description,
-            due_date=task.due_date,
-            status=task.status
-        )
-        if not success:
-            logger.warning(f"Задача ID={task_id} не найдена для user_id={user.id}")
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задача не найдена")
-        task_data = await service.get_task(session, task_id, user.id)
-        if not task_data:
-            logger.warning(f"Задача ID={task_id} не найдена после обновления для user_id={user.id}")
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задача не найдена")
-        logger.info(f"Маршрут: Задача обновлена, ID={task_id}, user_id={user.id}")
-        return task_data
+        async with session.begin():
+            success = await service.update_task(
+                session=session,
+                user_id=user.id,
+                task_id=task_id,
+                title=task.title,
+                description=task.description,
+                due_date=task.due_date,
+                status=task.status
+            )
+            if not success:
+                logger.warning(f"Задача ID={task_id} не найдена для user_id={user.id}")
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задача не найдена")
+            task_data = await service.get_task(session, task_id, user.id)
+            if not task_data:
+                logger.warning(f"Задача ID={task_id} не найдена после обновления для user_id={user.id}")
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задача не найдена")
+            logger.info(f"Маршрут: Задача обновлена, ID={task_id}, user_id={user.id}")
+            return task_data
     except ValueError as e:
         logger.error(f"Ошибка обновления задачи: {e}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -116,8 +118,9 @@ async def delete_task(
 ) -> None:
     user, session = user_session
     service = TaskService()
-    success = await service.delete_task(session, user.id, task_id)
-    if not success:
-        logger.warning(f"Задача ID={task_id} не найдена для user_id={user.id}")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задача не найдена")
-    logger.info(f"Маршрут: Задача удалена, ID={task_id}, user_id={user.id}")
+    async with session.begin():
+        success = await service.delete_task(session, user.id, task_id)
+        if not success:
+            logger.warning(f"Задача ID={task_id} не найдена для user_id={user.id}")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задача не найдена")
+        logger.info(f"Маршрут: Задача удалена, ID={task_id}, user_id={user.id}")

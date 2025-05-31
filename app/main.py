@@ -35,5 +35,5 @@ app = FastAPI(
 )
 
 # Подключение роутеров
-# app.include_router(tasks_router)
+app.include_router(tasks_router)
 app.include_router(auth_router)

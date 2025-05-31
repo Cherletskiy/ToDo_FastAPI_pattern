@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, field_validator
 from datetime import datetime
-import pytz
+
 
 class TaskCreate(BaseModel):
     title: str
@@ -24,13 +24,15 @@ class TaskCreate(BaseModel):
     @field_validator("due_date")
     def due_date_not_in_past(cls, v: datetime | None) -> datetime | None:
         if v is not None:
-            now_utc = datetime.now(tz=pytz.UTC)
-            v_utc = v if v.tzinfo else v.replace(tzinfo=pytz.UTC)
-            if v_utc < now_utc:
+            if v.tzinfo is not None:
+                v = v.replace(tzinfo=None)
+            now = datetime.now()
+            if v < now:
                 raise ValueError("Дата выполнения не может быть в прошлом")
         return v
 
     model_config = ConfigDict(extra="forbid")
+
 
 class TaskUpdate(BaseModel):
     title: str | None = None
@@ -45,23 +47,24 @@ class TaskUpdate(BaseModel):
         return v
 
     @field_validator("status")
-    def status_must_be_valid(cls, v: str | None) -> str | None:
-        if v is not None:
-            valid_statuses = ["not_started", "in_progress", "completed", "overdue"]
-            if v not in valid_statuses:
-                raise ValueError(f"Статус должен быть одним из: {', '.join(valid_statuses)}")
+    def status_must_be_valid(cls, v: str) -> str:
+        valid_statuses = ["not_started", "in_progress", "completed", "overdue"]
+        if v not in valid_statuses:
+            raise ValueError(f"Статус должен быть одним из: {', '.join(valid_statuses)}")
         return v
 
     @field_validator("due_date")
     def due_date_not_in_past(cls, v: datetime | None) -> datetime | None:
         if v is not None:
-            now_utc = datetime.now(tz=pytz.UTC)
-            v_utc = v if v.tzinfo else v.replace(tzinfo=pytz.UTC)
-            if v_utc < now_utc:
+            if v.tzinfo is not None:
+                v = v.replace(tzinfo=None)
+            now = datetime.now()
+            if v < now:
                 raise ValueError("Дата выполнения не может быть в прошлом")
         return v
 
     model_config = ConfigDict(extra="forbid")
+
 
 class TaskResponse(BaseModel):
     id: int
