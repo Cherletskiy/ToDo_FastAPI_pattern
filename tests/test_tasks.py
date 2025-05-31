@@ -1,0 +1,1 @@
+# pytest_asyncio doesn't work :( I can't figure out how to make it work with sessions
