@@ -1,28 +1,40 @@
-# 📝 ToDo API
+# 📝 ToDo API (FastAPI + Vanilla JS)
 
-Простое и удобное REST API для управления задачами. Построено на базе **FastAPI**, **SQLAlchemy**, **PostgreSQL**, с модульной структурой по принципу *репозиторий → сервис → маршруты*. Поддерживает аутентификацию через JWT, логирование, фильтрацию задач и документирование через Swagger UI.
-
+Небольшое full‑stack приложение для управления задачами, выполненное в рамках **тестового задания**.
 ---
 
 ## 🚀 Возможности
 
-- ✅ CRUD-операции с задачами: создать, прочитать, обновить, удалить
-- 🔍 Фильтрация задач по **статусу** и **диапазону дат**
-- 🔐 JWT-аутентификация: регистрация, логин, обновление токена
-- 📃 Swagger-документация по адресу `/docs`
-- 🧾 Логирование действий в файл `app.log`
+### Backend
+- CRUD‑операции с задачами
+- JWT‑аутентификация (access + refresh)
+- автоматическое определение просроченных задач
+- фильтрация задач по статусу и дате
+- логирование действий
 
+### Frontend
+- авторизация и регистрация пользователей
+- создание, изменение и удаление задач
+- обновление access‑токена через refresh
+- простой UI без фреймворков (vanilla JS)
 ---
 
 ## 🛠️ Технологии
 
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [PostgreSQL 16](https://www.postgresql.org/)
-- [SQLAlchemy 2](https://docs.sqlalchemy.org/)
-- [Pydantic v2](https://docs.pydantic.dev/)
-- [Docker + Compose](https://docs.docker.com/)
-- [Asyncpg](https://magicstack.github.io/asyncpg/)
-- [PyJWT](https://pyjwt.readthedocs.io/)
+### Backend
+- **FastAPI**
+- **SQLAlchemy 2 (async)**
+- **PostgreSQL**
+- **JWT (PyJWT)**
+- **Pydantic v2**
+
+### Frontend
+- HTML + CSS
+- Vanilla JavaScript (без фреймворков)
+
+### Инфраструктура
+- Docker
+- docker‑compose 
 
 ---
 
@@ -36,7 +48,10 @@ cd ToDo_FastAPI_pattern
 
 ### 2. Настройка переменных окружения
 
-Создайте файл `.env` в корне проекта:
+Создайте файл `.env` на основе примера (`.env.example`):
+```bash
+cp .env.example .env
+```
 
 ```env
 DB_HOST=postgres
@@ -83,26 +98,30 @@ docker-compose down -v       # остановка и удаление volumes (�
 * `alembic==1.15.2`
 * `pytz==2025.2`
 * `bcrypt==5.0.0`
+* `jinja2==3.1.4`
+* `aiofiles==23.2.1`
 
 ---
 
 ## 🗂️ Структура проекта
 
 ```
-todo-fastapi-pattern/
+todo_fastapi_pattern/
 ├── app/
-│   ├── database/           # Подключение к БД
-│   ├── models/             # Pydantic-схемы
-│   ├── repository/         # SQLAlchemy-операции
-│   ├── routes/             # Эндпоинты
-│   ├── services/           # Бизнес-логика
-│   ├── logging_config.py   # Настройка логирования
-│   └── main.py             # Точка входа FastAPI
-├── tests/                  # Юнит- и интеграционные тесты
-├── .env                    # Переменные окружения
-├── Dockerfile              # Docker-конфигурация
-├── docker-compose.yml      # Compose-конфигурация
-├── requirements.txt        # Python-зависимости
+│   ├── database/          # Подключение к БД и ORM‑модели
+│   ├── models/            # Pydantic‑схемы
+│   ├── repository/        # Работа с БД
+│   ├── services/          # Бизнес‑логика
+│   ├── routes/            # API‑эндпоинты
+│   ├── static/            # CSS и JS
+│   ├── templates/         # HTML
+│   ├── logging_config.py
+│   └── main.py            # Точка входа
+├── tests/                 # Ручные тесты API
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+└── README.md
 ```
 
 ---
@@ -243,8 +262,6 @@ CREATE INDEX ix_tasks_title ON tasks(title);
   docker-compose up --build
   python tests/manual_test.py
   ```
-
-> Планируется расширение покрытия с использованием `pytest` и `httpx`.
 
 ---
 
