@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
@@ -95,3 +96,35 @@ class TaskService:
         success = await repo.delete_task(user_id, task_id)
         logger.info(f"Сервис: Задача ID={task_id} {'удалена' if success else 'не найдена'}")
         return success
+
+    async def update_overdue_tasks(self, session: AsyncSession, user_id: int):
+        """Обновить статус просроченных задач на 'overdue'"""
+        try:
+            current_time = datetime.utcnow()
+
+            # Получаем все задачи пользователя со статусом "not_started" или "in_progress",
+            # у которых due_date в прошлом
+            query = select(Task).where(
+                Task.user_id == user_id,
+                Task.status.in_(["not_started", "in_progress"]),
+                Task.due_date.isnot(None),
+                Task.due_date < current_time
+            )
+
+            result = await session.execute(query)
+            overdue_tasks = result.scalars().all()
+
+            if not overdue_tasks:
+                return 0
+
+            # Обновляем статус для каждой просроченной задачи
+            updated_count = 0
+            for task in overdue_tasks:
+                task.status = "overdue"
+                updated_count += 1
+
+            logger.info(f"Обновлено {updated_count} просроченных задач для пользователя {user_id}")
+            return updated_count
+        except Exception as e:
+            logger.error(f"Ошибка при обновлении просроченных задач: {e}")
+            return 0

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDo App</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Мои задачи</h1>
+
+        <!-- Форма авторизации/регистрации -->
+        <div id="auth-section">
+            <div id="login-form">
+                <h2>Вход</h2>
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Пароль" required>
+                <button onclick="login()">Войти</button>
+                <button onclick="toggleRegister()">Регистрация</button>
+            </div>
+            <div id="register-form" style="display: none;">
+                <h2>Регистрация</h2>
+                <input type="text" id="register-username" placeholder="Имя пользователя" required>
+                <input type="email" id="register-email" placeholder="Email" required>
+                <input type="password" id="register-password" placeholder="Пароль" required>
+                <button onclick="register()">Зарегистрироваться</button>
+                <button onclick="toggleRegister()">Назад к входу</button>
+            </div>
+        </div>
+
+        <!-- Основной интерфейс задач (скрыт до авторизации) -->
+        <div id="todo-section" style="display: none;">
+            <div class="task-form">
+                <h2>Создать новую задачу</h2>
+                <input type="text" id="task-title" placeholder="Название задачи" required>
+                <textarea id="task-description" placeholder="Описание задачи"></textarea>
+                <input type="datetime-local" id="task-due-date">
+                <select id="task-status">
+                    <option value="not_started">Не начата</option>
+                    <option value="in_progress">В процессе</option>
+                    <option value="completed">Завершена</option>
+                    <option value="overdue">Просрочена</option>
+                </select>
+                <button onclick="createTask()">Добавить задачу</button>
+            </div>
+
+            <div class="filters">
+                <h2>Фильтры</h2>
+                <select id="filter-status" onchange="loadTasks()">
+                    <option value="">Все статусы</option>
+                    <option value="not_started">Не начатые</option>
+                    <option value="in_progress">В процессе</option>
+                    <option value="completed">Завершенные</option>
+                    <option value="overdue">Просроченные</option>
+                </select>
+                <button onclick="logout()">Выйти</button>
+            </div>
+
+            <div id="tasks-container" class="tasks-list">
+                <!-- Задачи будут загружаться сюда динамически -->
+                <p>Нет задач. Создайте первую задачу!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    <div id="notifications-container" class="notifications-container"></div>
+</body>
+</html>

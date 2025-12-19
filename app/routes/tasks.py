@@ -67,12 +67,21 @@ async def get_task(
 
 @router.get("/", response_model=list[TaskResponse])
 async def get_tasks(
-    status: str | None = None,
-    due_date: datetime | None = None,
-    user_session: tuple = Depends(get_current_user_and_session)
+        status: str | None = None,
+        due_date: datetime | None = None,
+        user_session: tuple = Depends(get_current_user_and_session)
 ) -> list[TaskResponse]:
     user, session = user_session
     service = TaskService()
+
+    # Сначала обновляем статусы просроченных задач
+    try:
+        await service.update_overdue_tasks(session, user.id)
+    except Exception as e:
+        logger.error(f"Ошибка при обновлении просроченных задач: {e}")
+        # Не прерываем выполнение, даже если обновление не удалось
+
+    # Затем получаем актуальный список задач
     tasks = await service.get_tasks(session, user.id, status, due_date)
     logger.info(f"Маршрут: Получено {len(tasks)} задач для user_id={user.id}")
     return tasks
