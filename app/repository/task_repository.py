@@ -1,7 +1,8 @@
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError, DataError
 from datetime import datetime
+
+from sqlalchemy import select
+from sqlalchemy.exc import DataError, IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import Task
 from app.logging_config import setup_logger
@@ -19,7 +20,7 @@ class TaskRepository:
         title: str,
         description: str | None = None,
         due_date: datetime | None = None,
-        status: str = "not_started"
+        status: str = "not_started",
     ) -> int:
         try:
             if due_date is not None and due_date.tzinfo is not None:
@@ -29,12 +30,14 @@ class TaskRepository:
                 title=title,
                 description=description,
                 due_date=due_date,
-                status=status
+                status=status,
             )
             self.session.add(task)
             await self.session.flush()
             task_id = task.id
-            logger.info(f"Задача создана: ID={task_id}, user_id={user_id}, title={title}")
+            logger.info(
+                f"Задача создана: ID={task_id}, user_id={user_id}, title={title}"
+            )
             return task_id
         except (IntegrityError, DataError) as e:
             logger.error(f"Ошибка создания задачи: {e}")
@@ -51,10 +54,7 @@ class TaskRepository:
         return task
 
     async def get_tasks(
-        self,
-        user_id: int,
-        status: str | None = None,
-        due_date: datetime | None = None
+        self, user_id: int, status: str | None = None, due_date: datetime | None = None
     ) -> list[Task]:
         query = select(Task).filter_by(user_id=user_id)
         if status:
@@ -75,7 +75,7 @@ class TaskRepository:
         title: str | None = None,
         description: str | None = None,
         due_date: datetime | None = None,
-        status: str | None = None
+        status: str | None = None,
     ) -> bool:
         query = select(Task).filter_by(id=task_id, user_id=user_id)
         result = await self.session.execute(query)

@@ -1,5 +1,6 @@
-from pydantic import BaseModel, ConfigDict, field_validator
 from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class TaskCreate(BaseModel):
@@ -18,7 +19,9 @@ class TaskCreate(BaseModel):
     def status_must_be_valid(cls, v: str) -> str:
         valid_statuses = ["not_started", "in_progress", "completed", "overdue"]
         if v not in valid_statuses:
-            raise ValueError(f"Статус должен быть одним из: {', '.join(valid_statuses)}")
+            raise ValueError(
+                f"Статус должен быть одним из: {', '.join(valid_statuses)}"
+            )
         return v
 
     @field_validator("due_date")
@@ -50,7 +53,9 @@ class TaskUpdate(BaseModel):
     def status_must_be_valid(cls, v: str) -> str:
         valid_statuses = ["not_started", "in_progress", "completed", "overdue"]
         if v not in valid_statuses:
-            raise ValueError(f"Статус должен быть одним из: {', '.join(valid_statuses)}")
+            raise ValueError(
+                f"Статус должен быть одним из: {', '.join(valid_statuses)}"
+            )
         return v
 
     @field_validator("due_date")

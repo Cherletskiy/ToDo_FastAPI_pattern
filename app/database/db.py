@@ -1,10 +1,11 @@
-from dotenv import load_dotenv
 import os
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-from app.logging_config import setup_logger
+from dotenv import load_dotenv
+from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
+                                    create_async_engine)
+
 from app.database.models import Base
-
+from app.logging_config import setup_logger
 
 # Настройка логирования
 logger = setup_logger(__name__)
@@ -23,17 +24,10 @@ DATABASE_CONFIG = {
 
 DSN = f"postgresql+asyncpg://{DATABASE_CONFIG['user']}:{DATABASE_CONFIG['password']}@{DATABASE_CONFIG['host']}:{DATABASE_CONFIG['port']}/{DATABASE_CONFIG['database']}"
 
-engine = create_async_engine(
-    url=DSN,
-    echo=True,
-    pool_size=5,
-    max_overflow=10
-)
+engine = create_async_engine(url=DSN, echo=True, pool_size=5, max_overflow=10)
 
 async_session_factory = async_sessionmaker(
-    bind=engine,
-    expire_on_commit=False,
-    class_=AsyncSession
+    bind=engine, expire_on_commit=False, class_=AsyncSession
 )
 
 
