@@ -5,7 +5,6 @@ from enum import Enum as PyEnum
 
 from app.logging_config import setup_logger
 
-# Настройка логирования
 logger = setup_logger(__name__)
 
 

@@ -82,6 +82,7 @@ docker-compose down -v       # остановка и удаление volumes (�
 * `python-multipart==0.0.19`
 * `alembic==1.15.2`
 * `pytz==2025.2`
+* `bcrypt==5.0.0`
 
 ---
 
