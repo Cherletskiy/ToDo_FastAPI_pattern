@@ -17,10 +17,10 @@ def setup_logger(name: str) -> logging.Logger:
         logger.addHandler(stream_handler)
 
         # Обработчик для записи в файл с ротацией
-        # file_handler = RotatingFileHandler(
-        #     "app.log", maxBytes=10_000_000, backupCount=5
-        # )
-        # file_handler.setFormatter(formatter)
-        # logger.addHandler(file_handler)
+        file_handler = RotatingFileHandler(
+            "app.log", maxBytes=10_000_000, backupCount=5
+        )
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
     return logger
